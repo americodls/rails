@@ -7,6 +7,7 @@ module ActiveRecord
   module Batches
     ORDER_IGNORE_MESSAGE = "Scoped order is ignored, use :cursor with :order to configure custom order."
     DEFAULT_ORDER = :asc
+    DEFAULT_BATCH_SIZE = 1_000
 
     # Looping through a collection of records from the database
     # (using the Scoping::Named::ClassMethods.all method, for example)
@@ -82,7 +83,7 @@ module ActiveRecord
     #
     # NOTE: By its nature, batch processing is subject to race conditions if
     # other processes are modifying the database.
-    def find_each(start: nil, finish: nil, batch_size: 1000, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER, &block)
+    def find_each(start: nil, finish: nil, batch_size: DEFAULT_BATCH_SIZE, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER, &block)
       if block_given?
         find_in_batches(start: start, finish: finish, batch_size: batch_size, error_on_ignore: error_on_ignore, cursor: cursor, order: order) do |records|
           records.each(&block)
@@ -158,7 +159,7 @@ module ActiveRecord
     #
     # NOTE: By its nature, batch processing is subject to race conditions if
     # other processes are modifying the database.
-    def find_in_batches(start: nil, finish: nil, batch_size: 1000, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER)
+    def find_in_batches(start: nil, finish: nil, batch_size: DEFAULT_BATCH_SIZE, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER)
       relation = self
       unless block_given?
         return to_enum(:find_in_batches, start: start, finish: finish, batch_size: batch_size, error_on_ignore: error_on_ignore, cursor: cursor, order: order) do
@@ -256,7 +257,7 @@ module ActiveRecord
     #
     # NOTE: By its nature, batch processing is subject to race conditions if
     # other processes are modifying the database.
-    def in_batches(of: 1000, start: nil, finish: nil, load: false, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER, use_ranges: nil, &block)
+    def in_batches(of: DEFAULT_BATCH_SIZE, start: nil, finish: nil, load: false, error_on_ignore: nil, cursor: primary_key, order: DEFAULT_ORDER, use_ranges: nil, &block)
       cursor = Array(cursor).map(&:to_s)
       ensure_valid_options_for_batching!(cursor, start, finish, order)
 
